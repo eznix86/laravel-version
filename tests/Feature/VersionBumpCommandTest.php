@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Eznix86\Version\Commands\VersionBumpCommand;
 use Eznix86\Version\Version;
 use Eznix86\Version\VersionLoader;
 use Illuminate\Process\FakeProcessResult;
@@ -251,6 +252,33 @@ describe('version:bump command', function (): void {
             $this->artisan('version:bump', ['type' => 'patch'])
                 ->expectsOutputToContain('Failed to create git tag')
                 ->assertSuccessful();
+        });
+    });
+
+    describe('production protection', function (): void {
+        afterEach(function (): void {
+            VersionBumpCommand::prohibit(false);
+        });
+
+        it('fails when command is prohibited', function (): void {
+            VersionBumpCommand::prohibit(true);
+
+            $this->artisan('version:bump', ['type' => 'patch'])
+                ->assertFailed();
+
+            // Version should not have changed
+            $data = json_decode(file_get_contents($this->tempPath), true);
+            expect($data['version'])->toBe('1.0.0');
+        });
+
+        it('runs when command is not prohibited', function (): void {
+            VersionBumpCommand::prohibit(false);
+
+            $this->artisan('version:bump', ['type' => 'patch'])
+                ->assertSuccessful();
+
+            $data = json_decode(file_get_contents($this->tempPath), true);
+            expect($data['version'])->toBe('1.0.1');
         });
     });
 });

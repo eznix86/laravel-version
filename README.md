@@ -8,9 +8,10 @@ Semantic versioning for Laravel applications with git integration.
 composer require eznix86/laravel-version
 ```
 
-Publish the version file:
+Publish the configuration and version file:
 
 ```bash
+php artisan vendor:publish --tag=version-config
 php artisan vendor:publish --tag=version-json
 ```
 
@@ -61,8 +62,10 @@ version()->lt(new Version('2.0.0'));
 ### Blade
 
 ```blade
-<footer>v@version</footer>
+<footer>@version</footer>  <!-- outputs: v1.0.0 (with default prefix) -->
 ```
+
+The `@version` directive automatically includes the configured prefix.
 
 ### Facade
 
@@ -75,21 +78,53 @@ Version::incrementMinor();
 
 ## Configuration
 
-Publish the config file:
-
-```bash
-php artisan vendor:publish --tag=version-config
-```
-
 ```php
 // config/version.php
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Version Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This value is prepended to the version string when using the @version
+    | Blade directive. Set to an empty string to disable the prefix.
+    |
+    */
+
+    'prefix' => 'v',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Git Integration
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, version bumps will automatically create a git commit and
+    | tag. You can customize the commit message and tag format using the
+    | {version} placeholder which will be replaced with the new version.
+    |
+    */
+
     'git' => [
         'enabled' => true,
         'commit_message' => 'Bump version to {version}',
         'tag_format' => 'v{version}',
     ],
+
 ];
+```
+
+## Production Protection
+
+To prevent accidental version bumps in production, add this to your `AppServiceProvider`:
+
+```php
+use Eznix86\Version\Commands\VersionBumpCommand;
+
+public function boot(): void
+{
+    VersionBumpCommand::prohibit($this->app->isProduction());
+}
 ```
 
 ## License

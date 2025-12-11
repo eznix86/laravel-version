@@ -8,11 +8,13 @@ use Eznix86\Version\Git;
 use Eznix86\Version\Version;
 use Eznix86\Version\VersionLoader;
 use Illuminate\Console\Command;
+use Illuminate\Console\Prohibitable;
 
 use function Laravel\Prompts\select;
 
 class VersionBumpCommand extends Command
 {
+    use Prohibitable;
     protected $signature = 'version:bump
                             {type? : The version type to bump (major, minor, patch, alpha, beta, rc)}
                             {--build= : Set build metadata (e.g., --build=123 results in 1.0.0+123)}
@@ -25,6 +27,10 @@ class VersionBumpCommand extends Command
 
     public function handle(Version $version, VersionLoader $loader, Git $git): int
     {
+        if ($this->isProhibited()) {
+            return self::FAILURE;
+        }
+
         $type = $this->argument('type');
 
         if (! is_string($type) || $type === '') {

@@ -70,7 +70,7 @@ class VersionServiceProvider extends ServiceProvider
      */
     protected function registerBladeDirectives(): void
     {
-        Blade::directive('version', fn (): string => "<?php echo app('version')->get(); ?>");
+        Blade::directive('version', fn (): string => "<?php echo config('version.prefix') . app('version')->get(); ?>");
     }
 
     /**

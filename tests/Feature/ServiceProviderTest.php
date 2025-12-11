@@ -49,6 +49,7 @@ describe('VersionServiceProvider', function (): void {
             $configPath = __DIR__.'/../../config/version.php';
             $config = require $configPath;
 
+            expect($config['prefix'])->toBe('v');
             expect($config['git']['enabled'])->toBe(true);
             expect($config['git']['commit_message'])->toBe('Bump version to {version}');
             expect($config['git']['tag_format'])->toBe('v{version}');
@@ -79,7 +80,35 @@ describe('VersionServiceProvider', function (): void {
         it('compiles @version directive correctly', function (): void {
             $compiled = Blade::compileString('@version');
 
+            expect($compiled)->toContain("config('version.prefix')");
             expect($compiled)->toContain("app('version')->get()");
+        });
+
+        it('renders @version with prefix from config', function (): void {
+            config(['version.prefix' => 'v']);
+            $this->app->singleton(Version::class, fn (): Version => new Version('1.2.3'));
+
+            $rendered = Blade::render('@version');
+
+            expect($rendered)->toBe('v1.2.3');
+        });
+
+        it('renders @version with custom prefix', function (): void {
+            config(['version.prefix' => 'version-']);
+            $this->app->singleton(Version::class, fn (): Version => new Version('2.0.0'));
+
+            $rendered = Blade::render('@version');
+
+            expect($rendered)->toBe('version-2.0.0');
+        });
+
+        it('renders @version with empty prefix', function (): void {
+            config(['version.prefix' => '']);
+            $this->app->singleton(Version::class, fn (): Version => new Version('3.0.0'));
+
+            $rendered = Blade::render('@version');
+
+            expect($rendered)->toBe('3.0.0');
         });
     });
 
