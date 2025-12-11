@@ -1,0 +1,52 @@
+<?php
+
+namespace Eznix86\Version;
+
+use Illuminate\Support\Facades\Process;
+
+class Git
+{
+    /**
+     * Check if git is available and we're in a git repository.
+     */
+    public function isAvailable(): bool
+    {
+        $result = Process::run('git rev-parse --is-inside-work-tree 2>/dev/null');
+
+        return $result->successful() && trim($result->output()) === 'true';
+    }
+
+    /**
+     * Commit the version file with the configured message.
+     */
+    public function commit(string $version, string $filePath): bool
+    {
+        $message = $this->formatMessage(config('version.git.commit_message'), $version);
+
+        Process::run(['git', 'add', $filePath]);
+
+        $result = Process::run(['git', 'commit', '-m', $message]);
+
+        return $result->successful();
+    }
+
+    /**
+     * Create a git tag for the version.
+     */
+    public function tag(string $version): bool
+    {
+        $tagName = $this->formatMessage(config('version.git.tag_format'), $version);
+
+        $result = Process::run(['git', 'tag', $tagName]);
+
+        return $result->successful();
+    }
+
+    /**
+     * Format a message template with the version.
+     */
+    protected function formatMessage(string $template, string $version): string
+    {
+        return str_replace('{version}', $version, $template);
+    }
+}
