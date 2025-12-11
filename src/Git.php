@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eznix86\Version;
 
 use Illuminate\Support\Facades\Process;

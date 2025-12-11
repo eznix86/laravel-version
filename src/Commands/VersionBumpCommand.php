@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eznix86\Version\Commands;
 
 use Eznix86\Version\Git;
 use Eznix86\Version\Version;
+use Eznix86\Version\VersionLoader;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\select;
@@ -12,17 +15,19 @@ class VersionBumpCommand extends Command
 {
     protected $signature = 'version:bump
                             {type? : The version type to bump (major, minor, patch, alpha, beta, rc)}
+                            {--build= : Set build metadata (e.g., --build=123 results in 1.0.0+123)}
                             {--no-git : Skip git commit and tag even if git integration is enabled}';
 
     protected $description = 'Bump the application version';
 
+    /** @var list<string> */
     protected array $types = ['major', 'minor', 'patch', 'alpha', 'beta', 'rc'];
 
-    public function handle(Version $version, Git $git): int
+    public function handle(Version $version, VersionLoader $loader, Git $git): int
     {
         $type = $this->argument('type');
 
-        if (! $type) {
+        if (! is_string($type) || $type === '') {
             $type = select(
                 label: 'What type of version bump?',
                 options: [
@@ -37,27 +42,33 @@ class VersionBumpCommand extends Command
             );
         }
 
-        if (! in_array($type, $this->types)) {
+        if (! in_array($type, $this->types, true)) {
             $this->error("Invalid version type: {$type}");
             $this->info('Valid types: '.implode(', ', $this->types));
 
             return self::FAILURE;
         }
 
+        /** @var 'major'|'minor'|'patch'|'alpha'|'beta'|'rc' $type */
         $oldVersion = $version->get();
 
         $this->bumpVersion($version, $type);
 
-        $version->save();
+        $build = $this->option('build');
+        if (is_string($build) && $build !== '') {
+            $version->setBuild($build);
+        }
+
+        $loader->save($version);
 
         $this->info("Version bumped: {$oldVersion} → {$version->get()}");
 
-        $this->handleGit($git, $version);
+        $this->handleGit($git, $version, $loader);
 
         return self::SUCCESS;
     }
 
-    protected function handleGit(Git $git, Version $version): void
+    protected function handleGit(Git $git, Version $version, VersionLoader $loader): void
     {
         if ($this->option('no-git')) {
             return;
@@ -75,7 +86,7 @@ class VersionBumpCommand extends Command
 
         $newVersion = $version->get();
 
-        if ($git->commit($newVersion, $version->path())) {
+        if ($git->commit($newVersion, $loader->path())) {
             $this->info("Committed: {$newVersion}");
         } else {
             $this->warn('Failed to create git commit.');
@@ -92,6 +103,9 @@ class VersionBumpCommand extends Command
         }
     }
 
+    /**
+     * @param  'major'|'minor'|'patch'|'alpha'|'beta'|'rc'  $type
+     */
     protected function bumpVersion(Version $version, string $type): void
     {
         match ($type) {
@@ -104,11 +118,14 @@ class VersionBumpCommand extends Command
         };
     }
 
+    /**
+     * @param  'alpha'|'beta'|'rc'  $type
+     */
     protected function handlePreRelease(Version $version, string $type): void
     {
         $preRelease = $version->preRelease();
 
-        if ($preRelease && str_starts_with($preRelease, "{$type}.")) {
+        if ($preRelease !== null && str_starts_with($preRelease, "{$type}.")) {
             $version->incrementPreRelease();
         } else {
             match ($type) {

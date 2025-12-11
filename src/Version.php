@@ -1,47 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eznix86\Version;
 
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\File;
 use PHLAK\SemVer\Version as SemVer;
 
-class Version
+class Version implements \Stringable
 {
     protected SemVer $semver;
 
-    protected string $path;
-
-    public function __construct(?string $path = null)
+    public function __construct(string $version = '1.0.0')
     {
-        $this->path = $path ?? App::basePath('version.json');
-        $this->load();
-    }
-
-    /**
-     * Load version from the version.json file.
-     */
-    protected function load(): void
-    {
-        if (File::exists($this->path)) {
-            $data = json_decode(File::get($this->path), true);
-            $this->semver = new SemVer($data['version'] ?? '1.0.0');
-        } else {
-            $this->semver = new SemVer('1.0.0');
-            $this->save();
-        }
-    }
-
-    /**
-     * Save the current version to the version.json file.
-     */
-    public function save(): self
-    {
-        File::put($this->path, json_encode([
-            'version' => (string) $this->semver,
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
-
-        return $this;
+        $this->semver = new SemVer($version);
     }
 
     /**
@@ -50,14 +21,6 @@ class Version
     public function get(): string
     {
         return (string) $this->semver;
-    }
-
-    /**
-     * Get the path to the version file.
-     */
-    public function path(): string
-    {
-        return $this->path;
     }
 
     /**
@@ -96,16 +59,6 @@ class Version
     public function incrementPatch(): self
     {
         $this->semver->incrementPatch();
-
-        return $this;
-    }
-
-    /**
-     * Set or increment pre-release version.
-     */
-    public function setPreRelease(?string $preRelease): self
-    {
-        $this->semver->setPreRelease($preRelease);
 
         return $this;
     }
@@ -201,7 +154,7 @@ class Version
     }
 
     /**
-     * Check if this is a stable release (not a pre-release).
+     * Check if this is a stable release.
      */
     public function isStable(): bool
     {
@@ -209,110 +162,105 @@ class Version
     }
 
     /**
-     * Check if this is an alpha release.
+     * Get the build metadata string.
      */
-    public function isAlpha(): bool
+    public function build(): ?string
     {
-        return $this->semver->preRelease !== null
-            && str_starts_with($this->semver->preRelease, 'alpha');
+        return $this->semver->build;
     }
 
     /**
-     * Check if this is a beta release.
+     * Set build metadata.
      */
-    public function isBeta(): bool
+    public function setBuild(?string $build): self
     {
-        return $this->semver->preRelease !== null
-            && str_starts_with($this->semver->preRelease, 'beta');
+        $this->semver->setBuild($build);
+
+        return $this;
     }
 
     /**
-     * Check if this is a release candidate.
+     * Clear build metadata.
      */
-    public function isRc(): bool
+    public function clearBuild(): self
     {
-        return $this->semver->preRelease !== null
-            && str_starts_with($this->semver->preRelease, 'rc');
+        $this->semver->setBuild(null);
+
+        return $this;
     }
 
     /**
-     * Check if version matches a constraint (e.g., ">=1.0.0", "^2.0", "~1.5").
+     * Check if this version has build metadata.
      */
-    public function satisfies(string $constraint): bool
+    public function hasBuild(): bool
     {
-        return $this->semver->satisfies($constraint);
+        return $this->semver->build !== null;
     }
 
     /**
-     * Compare with another version. Returns -1, 0, or 1.
+     * Check if this version is greater than another.
      */
-    public function compareTo(string $version): int
+    public function gt(self|string $version): bool
     {
-        $other = new SemVer($version);
+        return $this->semver->gt($this->toSemVer($version));
+    }
 
-        if ($this->semver->gt($other)) {
-            return 1;
+    /**
+     * Check if this version is greater than or equal to another.
+     */
+    public function gte(self|string $version): bool
+    {
+        return $this->semver->gte($this->toSemVer($version));
+    }
+
+    /**
+     * Check if this version is less than another.
+     */
+    public function lt(self|string $version): bool
+    {
+        return $this->semver->lt($this->toSemVer($version));
+    }
+
+    /**
+     * Check if this version is less than or equal to another.
+     */
+    public function lte(self|string $version): bool
+    {
+        return $this->semver->lte($this->toSemVer($version));
+    }
+
+    /**
+     * Check if this version is equal to another.
+     */
+    public function eq(self|string $version): bool
+    {
+        return $this->semver->eq($this->toSemVer($version));
+    }
+
+    /**
+     * Check if this version is not equal to another.
+     */
+    public function neq(self|string $version): bool
+    {
+        return $this->semver->neq($this->toSemVer($version));
+    }
+
+    /**
+     * Convert a Version or string to SemVer instance.
+     */
+    protected function toSemVer(self|string $version): SemVer
+    {
+        if ($version instanceof self) {
+            return $version->raw();
         }
 
-        if ($this->semver->lt($other)) {
-            return -1;
-        }
-
-        return 0;
-    }
-
-    /**
-     * Check if version is greater than another.
-     */
-    public function gt(string $version): bool
-    {
-        return $this->semver->gt(new SemVer($version));
-    }
-
-    /**
-     * Check if version is greater than or equal to another.
-     */
-    public function gte(string $version): bool
-    {
-        return $this->semver->gte(new SemVer($version));
-    }
-
-    /**
-     * Check if version is less than another.
-     */
-    public function lt(string $version): bool
-    {
-        return $this->semver->lt(new SemVer($version));
-    }
-
-    /**
-     * Check if version is less than or equal to another.
-     */
-    public function lte(string $version): bool
-    {
-        return $this->semver->lte(new SemVer($version));
-    }
-
-    /**
-     * Check if version equals another.
-     */
-    public function eq(string $version): bool
-    {
-        return $this->semver->eq(new SemVer($version));
-    }
-
-    /**
-     * Check if version does not equal another.
-     */
-    public function neq(string $version): bool
-    {
-        return $this->semver->neq(new SemVer($version));
+        return new SemVer($version);
     }
 
     /**
      * Get the underlying SemVer instance.
      */
-    public function semver(): SemVer
+    public function raw(): SemVer
     {
         return $this->semver;
     }

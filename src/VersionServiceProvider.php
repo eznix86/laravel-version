@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eznix86\Version;
 
 use Eznix86\Version\Commands\VersionBumpCommand;
 use Eznix86\Version\Commands\VersionShowCommand;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -13,6 +16,7 @@ class VersionServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
+    #[\Override]
     public function register(): void
     {
         $this->mergeConfigFrom(
@@ -20,9 +24,9 @@ class VersionServiceProvider extends ServiceProvider
             'version'
         );
 
-        $this->app->singleton(Version::class, function ($app) {
-            return new Version;
-        });
+        $this->app->singleton(VersionLoader::class);
+
+        $this->app->singleton(Version::class, fn (Application $app): Version => $app->make(VersionLoader::class)->load());
 
         $this->app->alias(Version::class, 'version');
 
@@ -66,9 +70,7 @@ class VersionServiceProvider extends ServiceProvider
      */
     protected function registerBladeDirectives(): void
     {
-        Blade::directive('version', function () {
-            return "<?php echo app('version')->get(); ?>";
-        });
+        Blade::directive('version', fn (): string => "<?php echo app('version')->get(); ?>");
     }
 
     /**
@@ -77,8 +79,8 @@ class VersionServiceProvider extends ServiceProvider
     protected function registerAboutCommand(): void
     {
         if (class_exists(AboutCommand::class)) {
-            AboutCommand::add('Application', fn () => [
-                'Version' => $this->app->make(Version::class)->get(),
+            AboutCommand::add('Application', fn (): array => [
+                'Version' => (string) $this->app->make(Version::class)->get(),
             ]);
         }
     }

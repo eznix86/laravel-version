@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Eznix86\Version\Version;
 
 if (! function_exists('version')) {

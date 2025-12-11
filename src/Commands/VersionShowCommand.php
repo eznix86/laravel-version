@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eznix86\Version\Commands;
 
 use Eznix86\Version\Version;
@@ -22,6 +24,7 @@ class VersionShowCommand extends Command
                 ['Minor', $version->minor()],
                 ['Patch', $version->patch()],
                 ['Pre-release', $version->preRelease() ?? '-'],
+                ['Build', $version->build() ?? '-'],
             ]
         );
 
