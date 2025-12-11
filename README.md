@@ -114,6 +114,16 @@ return [
 ];
 ```
 
+## Artisan About
+
+The package automatically registers the version in Laravel's `about` command:
+
+```bash
+php artisan about
+```
+
+This will display your application version in the Application section.
+
 ## Production Protection
 
 To prevent accidental version bumps in production, add this to your `AppServiceProvider`:
