@@ -4,10 +4,21 @@ declare(strict_types=1);
 
 namespace Eznix86\Version;
 
+use Eznix86\Version\Commands\VersionBumpCommand;
+use Eznix86\Version\Commands\VersionSetCommand;
 use PHLAK\SemVer\Version as SemVer;
 
 class Version implements \Stringable
 {
+    /**
+     * Prohibit version commands from running.
+     */
+    public static function prohibitCommands(bool $prohibited = true): void
+    {
+        VersionBumpCommand::prohibit($prohibited);
+        VersionSetCommand::prohibit($prohibited);
+    }
+
     protected SemVer $semver;
 
     public function __construct(string $version = '1.0.0')

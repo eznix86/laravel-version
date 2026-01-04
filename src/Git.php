@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Eznix86\Version;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Process;
+use PHLAK\SemVer\Exceptions\InvalidVersionException;
 
 class Git
 {
@@ -25,9 +27,9 @@ class Git
     {
         $message = $this->formatMessage(config('version.git.commit_message'), $version);
 
-        Process::run(['git', 'add', $filePath]);
+        Process::run("git add {$filePath}");
 
-        $result = Process::run(['git', 'commit', '-m', $message]);
+        $result = Process::run("git commit -m {$message}");
 
         return $result->successful();
     }
@@ -39,9 +41,41 @@ class Git
     {
         $tagName = $this->formatMessage(config('version.git.tag_format'), $version);
 
-        $result = Process::run(['git', 'tag', $tagName]);
+        $result = Process::run("git tag {$tagName}");
 
         return $result->successful();
+    }
+
+    /**
+     * Get all git tags as a collection of Version objects.
+     */
+    public function allTags(): Collection
+    {
+        $result = Process::run('git tag -l');
+
+        if (! $result->successful()) {
+            return Collection::empty();
+        }
+
+        $tagFormat = config('version.git.tag_format', 'v{version}');
+        $prefix = str_replace('{version}', '', $tagFormat);
+
+        return Collection::make(explode("\n", trim($result->output())))
+            ->filter()
+            ->map(function (string $tag) use ($prefix): ?Version {
+                $versionString = str_starts_with($tag, $prefix)
+                    ? substr($tag, strlen($prefix))
+                    : $tag;
+
+                try {
+                    return new Version($versionString);
+                } catch (InvalidVersionException) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->sort(fn (Version $a, Version $b): int => $a->gt($b) ? 1 : -1)
+            ->values();
     }
 
     /**

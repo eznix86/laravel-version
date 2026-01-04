@@ -76,7 +76,7 @@ describe('Git', function (): void {
             $git = new Git;
             $git->commit('1.0.0', '/path/to/version.json');
 
-            Process::assertRan(fn ($process): bool => $process->command === ['git', 'add', '/path/to/version.json']);
+            Process::assertRan(fn ($process): bool => $process->command === 'git add /path/to/version.json');
         });
 
         it('uses configured commit message with version placeholder', function (): void {
@@ -87,7 +87,7 @@ describe('Git', function (): void {
             $git = new Git;
             $git->commit('3.0.0', '/path/to/version.json');
 
-            Process::assertRan(fn ($process): bool => $process->command === ['git', 'commit', '-m', 'Bump version to 3.0.0']);
+            Process::assertRan(fn ($process): bool => $process->command === 'git commit -m Bump version to 3.0.0');
         });
 
         it('uses custom commit message from config', function (): void {
@@ -99,7 +99,7 @@ describe('Git', function (): void {
             $git = new Git;
             $git->commit('4.0.0', '/path/to/version.json');
 
-            Process::assertRan(fn ($process): bool => $process->command === ['git', 'commit', '-m', 'Release 4.0.0']);
+            Process::assertRan(fn ($process): bool => $process->command === 'git commit -m Release 4.0.0');
         });
     });
 
@@ -134,7 +134,7 @@ describe('Git', function (): void {
             $git = new Git;
             $git->tag('2.5.0');
 
-            Process::assertRan(fn ($process): bool => $process->command === ['git', 'tag', 'v2.5.0']);
+            Process::assertRan(fn ($process): bool => $process->command === 'git tag v2.5.0');
         });
 
         it('uses custom tag format from config', function (): void {
@@ -146,7 +146,7 @@ describe('Git', function (): void {
             $git = new Git;
             $git->tag('1.2.3');
 
-            Process::assertRan(fn ($process): bool => $process->command === ['git', 'tag', 'release-1.2.3']);
+            Process::assertRan(fn ($process): bool => $process->command === 'git tag release-1.2.3');
         });
 
         it('handles pre-release versions', function (): void {
@@ -157,7 +157,114 @@ describe('Git', function (): void {
             $git = new Git;
             $git->tag('1.0.0-alpha.1');
 
-            Process::assertRan(fn ($process): bool => $process->command === ['git', 'tag', 'v1.0.0-alpha.1']);
+            Process::assertRan(fn ($process): bool => $process->command === 'git tag v1.0.0-alpha.1');
+        });
+    });
+
+    describe('allTags', function (): void {
+        it('returns empty collection when git tag command fails', function (): void {
+            Process::fake([
+                'git tag -l' => new FakeProcessResult(exitCode: 1, output: ''),
+            ]);
+
+            $git = new Git;
+            $tags = $git->allTags();
+
+            expect($tags)->toBeEmpty();
+        });
+
+        it('returns empty collection when no tags exist', function (): void {
+            Process::fake([
+                'git tag -l' => new FakeProcessResult(output: ''),
+            ]);
+
+            $git = new Git;
+            $tags = $git->allTags();
+
+            expect($tags)->toBeEmpty();
+        });
+
+        it('returns collection of Version objects from tags', function (): void {
+            Process::fake([
+                'git tag -l' => new FakeProcessResult(output: "v1.0.0\nv2.0.0\nv1.5.0"),
+            ]);
+
+            $git = new Git;
+            $tags = $git->allTags();
+
+            expect($tags)->toHaveCount(3);
+            expect($tags[0]->get())->toBe('1.0.0');
+            expect($tags[1]->get())->toBe('1.5.0');
+            expect($tags[2]->get())->toBe('2.0.0');
+        });
+
+        it('filters out invalid version tags', function (): void {
+            Process::fake([
+                'git tag -l' => new FakeProcessResult(output: "v1.0.0\nnot-a-version\nv2.0.0"),
+            ]);
+
+            $git = new Git;
+            $tags = $git->allTags();
+
+            expect($tags)->toHaveCount(2);
+            expect($tags[0]->get())->toBe('1.0.0');
+            expect($tags[1]->get())->toBe('2.0.0');
+        });
+
+        it('handles tags without prefix', function (): void {
+            config(['version.git.tag_format' => '{version}']);
+            Process::fake([
+                'git tag -l' => new FakeProcessResult(output: "1.0.0\n2.0.0"),
+            ]);
+
+            $git = new Git;
+            $tags = $git->allTags();
+
+            expect($tags)->toHaveCount(2);
+            expect($tags[0]->get())->toBe('1.0.0');
+            expect($tags[1]->get())->toBe('2.0.0');
+        });
+
+        it('handles pre-release tags', function (): void {
+            Process::fake([
+                'git tag -l' => new FakeProcessResult(output: "v1.0.0\nv2.0.0-alpha.1\nv1.5.0"),
+            ]);
+
+            $git = new Git;
+            $tags = $git->allTags();
+
+            expect($tags)->toHaveCount(3);
+            expect($tags[0]->get())->toBe('1.0.0');
+            expect($tags[1]->get())->toBe('1.5.0');
+            expect($tags[2]->get())->toBe('2.0.0-alpha.1');
+        });
+
+        it('handles build metadata in tags', function (): void {
+            Process::fake([
+                'git tag -l' => new FakeProcessResult(output: "v1.0.0\nv2.0.0+build.123"),
+            ]);
+
+            $git = new Git;
+            $tags = $git->allTags();
+
+            expect($tags)->toHaveCount(2);
+            expect($tags[0]->get())->toBe('1.0.0');
+            expect($tags[1]->get())->toBe('2.0.0+build.123');
+        });
+
+        it('sorts versions correctly using gt', function (): void {
+            Process::fake([
+                'git tag -l' => new FakeProcessResult(output: "v1.0.0\nv3.0.0\nv2.0.0\nv1.5.0"),
+            ]);
+
+            $git = new Git;
+            $tags = $git->allTags();
+
+            // Verify sorted order: 1.0.0 < 1.5.0 < 2.0.0 < 3.0.0
+            expect($tags[0]->get())->toBe('1.0.0');
+            expect($tags[1]->get())->toBe('1.5.0');
+            expect($tags[2]->get())->toBe('2.0.0');
+            expect($tags[3]->get())->toBe('3.0.0');
         });
     });
 });

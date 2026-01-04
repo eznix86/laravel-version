@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eznix86\Version;
 
 use Eznix86\Version\Commands\VersionBumpCommand;
+use Eznix86\Version\Commands\VersionSetCommand;
 use Eznix86\Version\Commands\VersionShowCommand;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Console\AboutCommand;
@@ -62,6 +63,7 @@ class VersionServiceProvider extends ServiceProvider
         $this->commands([
             VersionShowCommand::class,
             VersionBumpCommand::class,
+            VersionSetCommand::class,
         ]);
     }
 

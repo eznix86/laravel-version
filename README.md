@@ -39,11 +39,24 @@ php artisan version:bump minor --build=$(git rev-parse --short HEAD)
 
 # Skip git commit/tag
 php artisan version:bump patch --no-git
+
+# Set version to specific value
+php artisan version:set 2.0.0         # Set version to 2.0.0
+php artisan version:set 1.2.3-alpha.1  # Set version with pre-release
+php artisan version:set 1.0.0+build.1  # Set version with build metadata
+php artisan version:set 2.1.0 --no-git  # Skip git integration
+
+# Set version from latest git tag
+php artisan version:set --match-git-tags            # Use latest git tag as version (commits, doesn't create tag)
+php artisan version:set --match-git-tags --no-git   # Use latest git tag but skip commit/tag
 ```
 
 ### Helper
 
 ```php
+
+// Mirrors the Version Facade
+
 version()->get();              // "1.0.0"
 version()->major();            // 1
 version()->minor();            // 0
@@ -126,14 +139,27 @@ This will display your application version in the Application section.
 
 ## Production Protection
 
-To prevent accidental version bumps in production, add this to your `AppServiceProvider`:
+To prevent accidental version changes in production, add this to your `AppServiceProvider`:
+
+```php
+use Eznix86\Version\Version;
+
+public function boot(): void
+{
+    Version::prohibitCommands($this->app->isProduction());
+}
+```
+
+Or prohibit commands individually:
 
 ```php
 use Eznix86\Version\Commands\VersionBumpCommand;
+use Eznix86\Version\Commands\VersionSetCommand;
 
 public function boot(): void
 {
     VersionBumpCommand::prohibit($this->app->isProduction());
+    VersionSetCommand::prohibit($this->app->isProduction());
 }
 ```
 
