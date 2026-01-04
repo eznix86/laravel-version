@@ -60,7 +60,9 @@ class VersionSetCommand extends Command
             return $this->resolveVersionFromGitTags();
         }
 
-        return $this->argument('version');
+        $version = $this->argument('version');
+
+        return is_string($version) ? $version : null;
     }
 
     protected function resolveVersionFromGitTags(): ?string
@@ -91,7 +93,7 @@ class VersionSetCommand extends Command
             new Version($versionString);
 
             return true;
-        } catch (InvalidVersionException $e) {
+        } catch (InvalidVersionException) {
             $this->error("Invalid version format: {$versionString}");
             $this->info('Please provide a valid semver string (e.g., 1.0.0, 2.1.0-alpha.1, 3.0.0+build.123)');
 

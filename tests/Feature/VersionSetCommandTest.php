@@ -205,8 +205,8 @@ describe('version:set command', function (): void {
                 ->expectsOutputToContain('Committed: 2.0.0')
                 ->assertSuccessful();
 
-            Process::assertRan(fn ($process): bool => str_contains($process->command, 'commit'));
-            Process::assertNotRan(fn ($process): bool => (bool) preg_match('/^git tag v?\d+\.\d+\.\d+/', $process->command));
+            Process::assertRan(fn ($process): bool => str_contains((string) $process->command, 'commit'));
+            Process::assertNotRan(fn ($process): bool => (bool) preg_match('/^git tag v?\d+\.\d+\.\d+/', (string) $process->command));
         });
 
         it('works with pre-release tags', function (): void {
@@ -238,9 +238,9 @@ describe('version:set command', function (): void {
                 ->assertSuccessful();
 
             // Git commands ran (to read tags), but no commit or tag creation
-            Process::assertRan(fn ($process): bool => str_contains($process->command, 'tag -l'));
-            Process::assertNotRan(fn ($process): bool => str_contains($process->command, 'commit'));
-            Process::assertNotRan(fn ($process): bool => str_contains($process->command, 'git tag ') && ! str_contains($process->command, 'tag -l'));
+            Process::assertRan(fn ($process): bool => str_contains((string) $process->command, 'tag -l'));
+            Process::assertNotRan(fn ($process): bool => str_contains((string) $process->command, 'commit'));
+            Process::assertNotRan(fn ($process): bool => str_contains((string) $process->command, 'git tag ') && ! str_contains((string) $process->command, 'tag -l'));
         });
 
         it('handles single tag', function (): void {

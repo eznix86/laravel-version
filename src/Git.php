@@ -48,6 +48,8 @@ class Git
 
     /**
      * Get all git tags as a collection of Version objects.
+     *
+     * @return Collection<int, Version>
      */
     public function allTags(): Collection
     {
