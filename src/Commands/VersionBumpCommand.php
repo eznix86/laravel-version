@@ -15,6 +15,7 @@ use function Laravel\Prompts\select;
 class VersionBumpCommand extends Command
 {
     use Prohibitable;
+
     protected $signature = 'version:bump
                             {type? : The version type to bump (major, minor, patch, alpha, beta, rc)}
                             {--build= : Set build metadata (e.g., --build=123 results in 1.0.0+123)}

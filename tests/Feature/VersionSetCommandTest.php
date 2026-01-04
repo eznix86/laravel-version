@@ -240,13 +240,13 @@ describe('version:set command', function (): void {
             // Git commands ran (to read tags), but no commit or tag creation
             Process::assertRan(fn ($process): bool => str_contains($process->command, 'tag -l'));
             Process::assertNotRan(fn ($process): bool => str_contains($process->command, 'commit'));
-            Process::assertNotRan(fn ($process): bool => str_contains($process->command, 'git tag ') && !str_contains($process->command, 'tag -l'));
+            Process::assertNotRan(fn ($process): bool => str_contains($process->command, 'git tag ') && ! str_contains($process->command, 'tag -l'));
         });
 
         it('handles single tag', function (): void {
             Process::fake([
                 'git rev-parse --is-inside-work-tree 2>/dev/null' => new FakeProcessResult(output: 'true'),
-                'git tag -l' => new FakeProcessResult(output: "v1.0.0"),
+                'git tag -l' => new FakeProcessResult(output: 'v1.0.0'),
                 '*' => new FakeProcessResult,
             ]);
 
