@@ -67,9 +67,18 @@ version()->isStable();         // true
 version()->isPreRelease();     // false
 
 // Comparisons
-version()->gt('0.9.0');        // true
-version()->eq('1.0.0');        // true
-version()->lt(new Version('2.0.0'));
+version()->gt('0.9.0');                  // true
+version()->isGreaterThan('0.9.0');       // true (alias of gt)
+version()->gte('1.0.0');                 // true
+version()->isGreaterThanOrEqualTo('1.0.0'); // true (alias of gte)
+version()->lt('2.0.0');                  // true
+version()->isLessThan('2.0.0');          // true (alias of lt)
+version()->lte('1.0.0');                 // true
+version()->isLessThanOrEqualTo('1.0.0'); // true (alias of lte)
+version()->eq('1.0.0');                  // true
+version()->isCompatibleWith('1.0.0');    // true (alias of eq)
+version()->neq('2.0.0');                 // true
+version()->isNotEqualTo('2.0.0');        // true (alias of neq)
 ```
 
 ### Blade
