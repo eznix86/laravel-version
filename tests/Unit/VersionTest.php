@@ -364,6 +364,50 @@ describe('Version', function (): void {
             expect($beta->lt($stable))->toBeTrue();
             expect($alpha->lt('1.0.0'))->toBeTrue();
         });
+
+        it('aliases: isGreaterThan', function (): void {
+            $version = new Version('2.0.0');
+
+            expect($version->isGreaterThan('1.0.0'))->toBeTrue();
+            expect($version->isGreaterThan('3.0.0'))->toBeFalse();
+        });
+
+        it('aliases: isGreaterThanOrEqualTo', function (): void {
+            $version = new Version('2.0.0');
+
+            expect($version->isGreaterThanOrEqualTo('2.0.0'))->toBeTrue();
+            expect($version->isGreaterThanOrEqualTo('1.0.0'))->toBeTrue();
+            expect($version->isGreaterThanOrEqualTo('3.0.0'))->toBeFalse();
+        });
+
+        it('aliases: isLessThan', function (): void {
+            $version = new Version('1.0.0');
+
+            expect($version->isLessThan('2.0.0'))->toBeTrue();
+            expect($version->isLessThan('0.5.0'))->toBeFalse();
+        });
+
+        it('aliases: isLessThanOrEqualTo', function (): void {
+            $version = new Version('1.0.0');
+
+            expect($version->isLessThanOrEqualTo('1.0.0'))->toBeTrue();
+            expect($version->isLessThanOrEqualTo('2.0.0'))->toBeTrue();
+            expect($version->isLessThanOrEqualTo('0.5.0'))->toBeFalse();
+        });
+
+        it('aliases: isCompatibleWith', function (): void {
+            $version = new Version('2.0.0');
+
+            expect($version->isCompatibleWith('2.0.0'))->toBeTrue();
+            expect($version->isCompatibleWith('1.0.0'))->toBeFalse();
+        });
+
+        it('aliases: isNotEqualTo', function (): void {
+            $version = new Version('2.0.0');
+
+            expect($version->isNotEqualTo('1.0.0'))->toBeTrue();
+            expect($version->isNotEqualTo('2.0.0'))->toBeFalse();
+        });
     });
 
     describe('magic methods', function (): void {

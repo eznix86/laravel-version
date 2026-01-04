@@ -217,11 +217,27 @@ class Version implements \Stringable
     }
 
     /**
+     * Check if this version is greater than another (alias of gt).
+     */
+    public function isGreaterThan(self|string $version): bool
+    {
+        return $this->gt($version);
+    }
+
+    /**
      * Check if this version is greater than or equal to another.
      */
     public function gte(self|string $version): bool
     {
         return $this->semver->gte($this->toSemVer($version));
+    }
+
+    /**
+     * Check if this version is greater than or equal to another (alias of gte).
+     */
+    public function isGreaterThanOrEqualTo(self|string $version): bool
+    {
+        return $this->gte($version);
     }
 
     /**
@@ -233,11 +249,27 @@ class Version implements \Stringable
     }
 
     /**
+     * Check if this version is less than another (alias of lt).
+     */
+    public function isLessThan(self|string $version): bool
+    {
+        return $this->lt($version);
+    }
+
+    /**
      * Check if this version is less than or equal to another.
      */
     public function lte(self|string $version): bool
     {
         return $this->semver->lte($this->toSemVer($version));
+    }
+
+    /**
+     * Check if this version is less than or equal to another (alias of lte).
+     */
+    public function isLessThanOrEqualTo(self|string $version): bool
+    {
+        return $this->lte($version);
     }
 
     /**
@@ -249,11 +281,27 @@ class Version implements \Stringable
     }
 
     /**
+     * Check if this version is compatible with another (alias of eq).
+     */
+    public function isCompatibleWith(self|string $version): bool
+    {
+        return $this->eq($version);
+    }
+
+    /**
      * Check if this version is not equal to another.
      */
     public function neq(self|string $version): bool
     {
         return $this->semver->neq($this->toSemVer($version));
+    }
+
+    /**
+     * Check if this version is not equal to another (alias of neq).
+     */
+    public function isNotEqualTo(self|string $version): bool
+    {
+        return $this->neq($version);
     }
 
     /**
