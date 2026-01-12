@@ -1,3 +1,8 @@
+<p align="">
+    <a href="https://packagist.org/packages/eznix86/laravel-version"><img src="https://img.shields.io/packagist/v/eznix86/laravel-version.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+    <a href="https://packagist.org/packages/eznix86/laravel-version"><img src="https://img.shields.io/packagist/dt/eznix86/laravel-version.svg?style=flat-square" alt="Total Downloads"></a>
+</p>
+
 # Laravel Version
 
 Semantic versioning for Laravel applications with git integration.
