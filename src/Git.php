@@ -29,7 +29,8 @@ class Git
 
         Process::run("git add {$filePath}");
 
-        $result = Process::run("git commit -m {$message}");
+        $result = Process::run("git commit -m \"{$message}\"");
+
 
         return $result->successful();
     }
