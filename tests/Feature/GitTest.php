@@ -87,7 +87,7 @@ describe('Git', function (): void {
             $git = new Git;
             $git->commit('3.0.0', '/path/to/version.json');
 
-            Process::assertRan(fn ($process): bool => $process->command === 'git commit -m Bump version to 3.0.0');
+            Process::assertRan(fn ($process): bool => $process->command === 'git commit -m "Bump version to 3.0.0"');
         });
 
         it('uses custom commit message from config', function (): void {
@@ -99,7 +99,34 @@ describe('Git', function (): void {
             $git = new Git;
             $git->commit('4.0.0', '/path/to/version.json');
 
-            Process::assertRan(fn ($process): bool => $process->command === 'git commit -m Release 4.0.0');
+            Process::assertRan(fn ($process): bool => $process->command === 'git commit -m "Release 4.0.0"');
+        });
+
+
+        it('correctly escapes double quotes in string', function (): void {
+            config(['version.git.commit_message' => 'Release "{version}"']);
+            Process::fake([
+                '*' => new FakeProcessResult,
+            ]);
+
+            $git = new Git;
+            $git->commit('4.0.0', '/path/to/version.json');
+            //echo $process->command;
+
+            Process::assertRan(fn ($process): bool => $process->command === 'git commit -m "Release \"4.0.0\""' );
+        });
+
+        it('correctly escapes single quotes in string', function (): void {
+            config(['version.git.commit_message' => "Release '{version}'"]);
+            Process::fake([
+                '*' => new FakeProcessResult,
+            ]);
+
+            $git = new Git;
+            $git->commit('4.0.0', '/path/to/version.json');
+            //echo $process->command;
+
+            Process::assertRan(fn ($process): bool => $process->command === 'git commit -m "Release \\\'4.0.0\\\'"' );
         });
     });
 

@@ -25,7 +25,7 @@ class Git
      */
     public function commit(string $version, string $filePath): bool
     {
-        $message = $this->formatMessage(config('version.git.commit_message'), $version);
+        $message = addslashes($this->formatMessage(config('version.git.commit_message'), $version));
 
         Process::run("git add {$filePath}");
 
@@ -40,7 +40,8 @@ class Git
      */
     public function tag(string $version): bool
     {
-        $tagName = $this->formatMessage(config('version.git.tag_format'), $version);
+        $tagName = addslashes($this->formatMessage(config('version.git.tag_format'), $version));
+
 
         $result = Process::run("git tag {$tagName}");
 
