@@ -40,7 +40,7 @@ class Git
      */
     public function tag(string $version): bool
     {
-        $tagName = addslashes($this->formatMessage(config('version.git.tag_format'), $version));
+        $tagName = $this->formatMessage(config('version.git.tag_format'), $version);
 
 
         $result = Process::run("git tag {$tagName}");
