@@ -31,7 +31,6 @@ class Git
 
         $result = Process::run("git commit -m \"{$message}\"");
 
-
         return $result->successful();
     }
 
@@ -41,7 +40,6 @@ class Git
     public function tag(string $version): bool
     {
         $tagName = $this->formatMessage(config('version.git.tag_format'), $version);
-
 
         $result = Process::run("git tag {$tagName}");
 

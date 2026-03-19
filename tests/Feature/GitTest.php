@@ -111,7 +111,6 @@ describe('Git', function (): void {
 
             $git = new Git;
             $git->commit('4.0.0', '/path/to/version.json');
-            //echo $process->command;
 
             Process::assertRan(fn ($process): bool => $process->command === 'git commit -m "Release \"4.0.0\""' );
         });
@@ -124,7 +123,6 @@ describe('Git', function (): void {
 
             $git = new Git;
             $git->commit('4.0.0', '/path/to/version.json');
-            //echo $process->command;
 
             Process::assertRan(fn ($process): bool => $process->command === 'git commit -m "Release \\\'4.0.0\\\'"' );
         });
