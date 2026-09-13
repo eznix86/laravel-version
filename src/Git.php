@@ -15,7 +15,11 @@ class Git
      */
     public function isAvailable(): bool
     {
-        $result = Process::run('git rev-parse --is-inside-work-tree 2>/dev/null');
+        if (PHP_OS_FAMILY === 'Windows') {
+            $result = Process::run('git rev-parse --is-inside-work-tree 2>NUL');
+        } else {
+            $result = Process::run('git rev-parse --is-inside-work-tree 2>/dev/null');
+        }
 
         return $result->successful() && trim($result->output()) === 'true';
     }
